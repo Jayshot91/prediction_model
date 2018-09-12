@@ -437,12 +437,14 @@ def main():
         tweet_results(home_team, away_team, date, final_win_probs, dist_plot_file_name)
 
 
+    #create a dataframe out of the predictions to merge with the schedule dataframe
     predict_df = pd.DataFrame(predictions)
     predict_df.columns = ['game_id', 'game_date', 'home_team', 'home_abbrev', 'away_team', 'away_abbrev', 'home_win_probs']
 
     final_predict_df = daily_sched.merge(predict_df[['game_id', 'home_win_probs', 'home_abbrev', 'away_abbrev']],
                                          on='game_id')
 
+#create a prediction column to calculate accuracy
     final_predict_df['home_win_pred'] = np.where(final_predict_df.home_win_probs > .5, 1, 0)
 
     final_predict_df = final_predict_df[['game_id', 'game_date', 'home_team',
@@ -450,7 +452,7 @@ def main():
                                          'away_team', 'away_abbrev', 'away_team_id',
                                          'home_win_probs', 'home_win_pred']]
 
-
+#insert results into the results table on the database
     sched_insert(final_predict_df)
 
 
