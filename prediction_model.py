@@ -5,6 +5,7 @@ poisson distirbution and monte carlo sampling
 import os
 import sys
 import datetime
+import statistics
 import time
 import math
 import multiprocessing as mp
@@ -350,6 +351,7 @@ def main():
 
 #gets todays date
     date = datetime.datetime.now().strftime('%Y-%m-%d')
+
 #get daily schedule
     daily_sched = get_today_sched(date)
 
@@ -430,7 +432,11 @@ def main():
 #plotting the distributions of the results from the monte carlo sim and saving
 #it to a file to tweet
         plt.figure()
-        sns.distplot(home_win_probabilities).set_title(f'Distribution of {home_results.team_abbrev.unique()[0]} vs. {away_results.team_abbrev.unique()[0]} on {date}')
+        sns.distplot(home_win_probabilities).set_title(f'Distribution of {home_results.team_abbrev.unique()[0]} vs. {away_results.team_abbrev.unique()[0]} on {date} with 95% CI')
+        plt.xlabel(f'{home_results.team_abbrev.unique()[0]} win probabilities')
+        plt.ylabel('Counts')
+        plt.axvline(final_win_probs + (statistics.stdev(home_win_probabilities) * 1.96))
+        plt.axvline(final_win_probs - (statistics.stdev(home_win_probabilities) * 1.96))
         dist_plot_file_name = 'dist_plot.png'
         plt.savefig(dist_plot_file_name)
 
