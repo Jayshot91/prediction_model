@@ -151,8 +151,7 @@ def main():
 
     if schedule_dict['totalItems'] == 0:
         print("No Games Today")
-        continue
-        #return
+        return
     else:
         for game in games:
             try:
