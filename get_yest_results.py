@@ -74,7 +74,6 @@ def create_sched_df(pbp_dict, date):
     outcome = []
     linescore = pbp_dict['liveData']['linescore']
 
-    print(linescore)
     outcome.append(pbp_dict['gamePk'])
     outcome.append(pbp_dict['gameData']['game']['type'])
     outcome.append(pbp_dict['gameData']['game']['season'])
@@ -103,7 +102,7 @@ def create_sched_df(pbp_dict, date):
             seconds = int(game_end_time[0]) * 60 + int(game_end_time[1])
             outcome.append(seconds)
         except KeyError:
-            print('Error in NHL pbp')
+            loggin.exception('Error in NHL pbp')
             outcome.append(0)
 
     elif pbp_dict['liveData']['linescore']['currentPeriod'] == 5:
@@ -134,7 +133,7 @@ def get_pbp(game_id):
 
     api_url = f'http://statsapi.web.nhl.com/api/v1/game/{game_id}/feed/live'
 
-    print(api_url)
+    logging.info(api_url)
     req = requests.get(api_url)
     schedule_dict = req.json()
 
@@ -156,7 +155,7 @@ def main():
     games = get_game_ids(schedule_dict)
 
     if schedule_dict['totalItems'] == 0:
-        print("No Games Today")
+        logging.info("No Games Today")
         return
     else:
         for game in games:
