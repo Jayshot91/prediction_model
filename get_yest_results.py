@@ -2,6 +2,7 @@ import sys
 from datetime import date, datetime, timedelta
 import os
 import requests
+import logging
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
@@ -22,7 +23,7 @@ def get_yest_schedule(date):
 
     api_url = ('https://statsapi.web.nhl.com/api/v1/schedule?'
                'date={}').format(date)
-    print(api_url)
+    logging.info(api_url)
 
     req = requests.get(api_url)
     schedule_dict = req.json()
@@ -52,10 +53,11 @@ def get_game_ids(schedule_dict):
 
 def sched_insert(df):
 
-    print('Inserting DataFrame to the Database')
     engine = create_engine(os.environ.get('DEV_DB_CONNECT'))
     df.to_sql('nhl_schedule', schema='nhl_tables', con=engine,
               if_exists='append', index=False)
+
+    logging.info('Data inserted to the Database')
 
 def create_sched_df(pbp_dict, date):
     '''
@@ -72,6 +74,7 @@ def create_sched_df(pbp_dict, date):
     outcome = []
     linescore = pbp_dict['liveData']['linescore']
 
+    print(linescore)
     outcome.append(pbp_dict['gamePk'])
     outcome.append(pbp_dict['gameData']['game']['type'])
     outcome.append(pbp_dict['gameData']['game']['season'])
@@ -145,6 +148,9 @@ def main():
     date = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 
 
+    logging.basicConfig(filename='results.log',
+                        format="%(asctime)s:%(levelname)s:%(message)s",
+                        level=logging.INFO)
     rows = []
     schedule_dict = get_yest_schedule(date)
     games = get_game_ids(schedule_dict)
@@ -156,8 +162,9 @@ def main():
         for game in games:
             try:
                 pbp_dict = get_pbp(game)
-                rows.append(create_sched_df(pbp_dict, dates))
+                rows.append(create_sched_df(pbp_dict, date))
             except:
+                logging.exception('Exception')
                 continue
 
     sched_df_columns = ['game_id', 'game_type', 'season', 'game_date',
@@ -167,7 +174,7 @@ def main():
                         'home_win']
 
     sched_df = pd.DataFrame(rows, columns=sched_df_columns)
-    print(sched_df.head())
+    logging.info(sched_df)
 
     sched_insert(sched_df)
 
