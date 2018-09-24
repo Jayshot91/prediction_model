@@ -1,5 +1,5 @@
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import os
 import requests
 import pandas as pd
@@ -142,7 +142,7 @@ def main():
     This script pulls the schedule data of past games and the results
     of each game and inserts them into an Postgres table
     '''
-    date = (datetime.datetime.now() - datetime.timedelta(1)).strftime('%Y-%m-%d')
+    date = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 
 
     rows = []

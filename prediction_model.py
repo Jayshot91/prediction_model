@@ -7,6 +7,7 @@ import sys
 import datetime
 import statistics
 import time
+import logging
 import math
 import multiprocessing as mp
 import seaborn as sns
@@ -286,6 +287,9 @@ def monte_carlo_predict(home_results, away_results):
 #then it goes to an OT and if needed Shootout scenario that are binomial
 #distributions decided by home OT and Shootout probability determined by a
 #Bradley-Terry Model
+
+#TODO rewrite this to vectorize across the two numpy arrays instead of
+#looping 9-24-2018
     for home, away in zip(home_reg_goals, away_reg_goals):
         if home > away:
             results.append(1)
@@ -298,6 +302,7 @@ def monte_carlo_predict(home_results, away_results):
                 try:
                     prob_of_home_so_win = home_so_win_percent/(home_so_win_percent + away_so_win_percent)
                 except:
+                    logging.exception('Shootout probability calculation messed up')
                     prob_of_home_so_win = .5
                 results.append(np.random.binomial(1, prob_of_home_so_win))
             else:
@@ -305,6 +310,7 @@ def monte_carlo_predict(home_results, away_results):
                     prob_of_home_ot_win = home_ot_win_percent/(home_ot_win_percent + away_ot_win_percent)
                 except:
                     prob_of_home_ot_win = .5
+                    logging.exception('OT win probability calculation messed up')
                 results.append(np.random.binomial(1, prob_of_home_ot_win))
 
 #calculate the probability of the home team winning by averaging the wins and
@@ -332,7 +338,7 @@ def multi_proc_monte(home_results, away_results, iter=10000):
 
 #creates the 4 processes this computer only has four cores so it maxes at four
 #change for the number of cores for your computer
-    pool =  mp.Pool(4)
+    pool =  mp.Pool(os.cpu_count())
 #creates a list of process results the length of the iter keyword. I.e. it runs
 #the monte_carlo_predict function the number of times as passed to the iter
 #keyword in this case it will be a 1000 times
@@ -349,6 +355,11 @@ def multi_proc_monte(home_results, away_results, iter=10000):
 #over a time frame and store my results
 def main():
 
+#set up logger
+    logging.basicConfig(filename='prediction.log',
+                        format="%(asctime)s:%(levelname)s:%(message)s",
+                        level=logging.INFO)
+
 #gets todays date
     date = datetime.datetime.now().strftime('%Y-%m-%d')
 
@@ -357,7 +368,7 @@ def main():
 
 #if schedule is empty exit program
     if daily_sched.empty:
-        print('No Games Today')
+        logging.info('No Games Today')
         return
 
 #Query the results database to return past results
@@ -370,7 +381,7 @@ def main():
 
 
 
-#TODO run simulation using each teams distribution of goals scored in regulation
+#simulation runs using each teams distribution of goals scored in regulation
 #for ties determine probability of both teams not scoring in OT from their OT
 #poisson goal distributions. USe that p and (1-p) as a bernoulli trial to
 #determine if game was decided in OT. If it is decided in OT use Bradley-Terry
@@ -395,6 +406,7 @@ def main():
                 home_results = get_avg_df(df)
 
         except:
+            logging.exception(f'No past results for {home_team}')
             home_results = get_avg_df(df)
 
         try:
@@ -406,12 +418,13 @@ def main():
 
         except:
             away_results = get_avg_df(df)
+            logging.exception(f'No past results for {away_team}')
 
         #running the monte carlo simulation a 10,000 times
         #and printing outputs for testing
-        print(f'{away_team} vs. {home_team}')
-        print(date)
-        print(row.game_id)
+        logging.info(f'{away_team} vs. {home_team}')
+        logging.info(date)
+        logging.info(row.game_id)
 
         start_time = time.time()
 #runs the multi proc function to calculate home team win probs
@@ -419,8 +432,8 @@ def main():
         end_time = time.time()
         time_to_run = end_time - start_time
 
-        print(f'Time for simulation to run: {time_to_run}')
-        print(sum(home_win_probabilities)/len(home_win_probabilities))
+        logging.info(f'Time for simulation to run: {time_to_run}')
+        logging.info(sum(home_win_probabilities)/len(home_win_probabilities))
 
 #calculates final win probablilty by average all the probabilities from the
 #monte carlo sim
@@ -439,8 +452,10 @@ def main():
         plt.axvline(final_win_probs - (statistics.stdev(home_win_probabilities) * 1.96))
         dist_plot_file_name = 'dist_plot.png'
         plt.savefig(dist_plot_file_name)
+        logging.info("Plot created for {game_id}")
 
         tweet_results(home_team, away_team, date, final_win_probs, dist_plot_file_name)
+        logging.info("Results tweeted out for {game_id}")
 
 
     #create a dataframe out of the predictions to merge with the schedule dataframe
@@ -460,6 +475,7 @@ def main():
 
 #insert results into the results table on the database
     sched_insert(final_predict_df)
+    logging.info("Predictions have been inserted into prediction table")
 
 
     return
