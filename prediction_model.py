@@ -148,6 +148,7 @@ def clean_results(results_df, team, date):
     '''
     results_df = results_df[(results_df.game_date < date) & (results_df.game_type == 'R')]
     cleaned_results = []
+#TODO See if this loop could work better as an apply to speed things up 9-24-2018
     #looping through the results_df to pull out only the games the team variable played in.
     for index, row in results_df.iterrows():
         if row.home_team == team:
@@ -440,7 +441,10 @@ def main():
         final_win_probs = sum(home_win_probabilities)/len(home_win_probabilities)
 
 #appends to the predictions list so I can
-        predictions.append([game_id, date, home_team, home_results.team_abbrev.unique()[0], away_team, away_results.team_abbrev.unique()[0], final_win_probs])
+        try:
+            predictions.append([game_id, date, home_team, home_results.team_abbrev.unique()[0], away_team, away_results.team_abbrev.unique()[0], final_win_probs])
+        except AttributeError as e:
+            logging.exception(f"This is for stupid foreign teams\n{e}")
 
 #plotting the distributions of the results from the monte carlo sim and saving
 #it to a file to tweet
