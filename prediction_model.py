@@ -445,6 +445,7 @@ def main():
             predictions.append([game_id, date, home_team, home_results.team_abbrev.unique()[0], away_team, away_results.team_abbrev.unique()[0], final_win_probs])
         except AttributeError as e:
             logging.exception(f"This is for stupid foreign teams\n{e}")
+            continue
 
 #plotting the distributions of the results from the monte carlo sim and saving
 #it to a file to tweet
