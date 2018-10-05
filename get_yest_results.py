@@ -102,7 +102,7 @@ def create_sched_df(pbp_dict, date):
             seconds = int(game_end_time[0]) * 60 + int(game_end_time[1])
             outcome.append(seconds)
         except KeyError:
-            loggin.exception('Error in NHL pbp')
+            logging.exception('Error in NHL pbp')
             outcome.append(0)
 
     elif pbp_dict['liveData']['linescore']['currentPeriod'] == 5:
