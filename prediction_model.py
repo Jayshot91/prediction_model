@@ -457,10 +457,10 @@ def main():
         plt.axvline(final_win_probs - (statistics.stdev(home_win_probabilities) * 1.96))
         dist_plot_file_name = 'dist_plot.png'
         plt.savefig(dist_plot_file_name)
-        logging.info("Plot created for {game_id}")
+        logging.info(f"Plot created for {game_id}")
 
         tweet_results(home_team, away_team, date, final_win_probs, dist_plot_file_name)
-        logging.info("Results tweeted out for {game_id}")
+        logging.info(f"Results tweeted out for {game_id}")
 
 
     #create a dataframe out of the predictions to merge with the schedule dataframe
