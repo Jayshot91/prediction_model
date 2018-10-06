@@ -215,6 +215,9 @@ def monte_carlo_predict(home_results, away_results):
     '''
 
     results =[]
+#redo the seed of the random number generator so the same numbers aren't drawn
+#cause seed is set at the start of the multiprocess and used throughout
+    np.random.seed()
 
 #create the lambdas for the poisson distribution for regulation by adding the
 #home team's goals for and away teams goals against and average. I reverse the
