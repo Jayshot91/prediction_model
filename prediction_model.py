@@ -474,7 +474,7 @@ def main():
                                          on='game_id')
 
 #create a prediction column to calculate accuracy
-    final_predict_df['home_win_pred'] = np.where(final_predict_df.home_win_probs > .5, 1, 0)
+    final_predict_df['home_win_pred'] = np.where(final_predict_df.home_win_probs >= .5, 1, 0)
 
     final_predict_df = final_predict_df[['game_id', 'game_date', 'home_team',
                                          'home_abbrev', 'home_team_id',
